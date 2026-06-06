@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --primary: #0d9488;
+  --primary-dark: #0f766e;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --border: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  min-height: 100dvh;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-danger {
+  background: #fef2f2;
+  color: var(--danger);
+  border: 1px solid #fecaca;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+}
+
+.input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 0;
+  border-color: var(--primary);
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: var(--muted);
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.amount-positive {
+  color: var(--success);
+}
+
+.amount-negative {
+  color: var(--danger);
+}
