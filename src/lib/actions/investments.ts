@@ -31,12 +31,12 @@ async function adjustBalance(
 
 export async function withdrawInvestment(
   formData: FormData
-): Promise<{ error?: string; success?: boolean; profitLoss?: number }> {
+): Promise<void> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Not signed in" };
+  if (!user) return;
 
   const investmentId = formData.get("investment_id") as string;
   const toAccountId = formData.get("to_account_id") as string;
@@ -46,8 +46,8 @@ export async function withdrawInvestment(
   const date =
     (formData.get("transaction_date") as string) || new Date().toISOString().slice(0, 10);
 
-  if (!investmentId || !toAccountId) return { error: "Select accounts" };
-  if (!amount || amount <= 0) return { error: "Enter amount received" };
+  if (!investmentId || !toAccountId) return;
+  if (!amount || amount <= 0) return;
 
   const { data: inv } = await supabase
     .from("accounts")
@@ -56,7 +56,7 @@ export async function withdrawInvestment(
     .eq("user_id", user.id)
     .single();
 
-  if (!inv || inv.type !== "investment") return { error: "Invalid investment account" };
+  if (!inv || inv.type !== "investment") return;
 
   const { data: toAcc } = await supabase
     .from("accounts")
@@ -66,18 +66,18 @@ export async function withdrawInvestment(
     .single();
 
   if (!toAcc || (toAcc.type !== "cash" && toAcc.type !== "bank")) {
-    return { error: "Receive into cash or bank only" };
+    return;
   }
 
   const invested = Number(inv.invested_amount);
   const current = Number(inv.current_value);
 
   if (current <= 0 && invested <= 0) {
-    return { error: "This investment has no value to withdraw" };
+    return;
   }
 
   const calc = calcWithdrawal(invested, current, amount);
-  if (!calc) return { error: "Invalid amount" };
+  if (!calc) return;
 
   const isFull = fullExit || calc.isFullExit;
   const profitLoss = calc.profitLoss;
@@ -97,7 +97,7 @@ export async function withdrawInvestment(
     .select("id")
     .single();
 
-  if (txnError || !txn) return { error: txnError?.message || "Failed to save" };
+  if (txnError || !txn) return;
 
   await supabase.from("account_movements").insert([
     { transaction_id: txn.id, account_id: investmentId, amount: -amount },
@@ -128,6 +128,4 @@ export async function withdrawInvestment(
   revalidatePath("/investments/withdraw");
   revalidatePath("/transactions");
   revalidatePath("/accounts");
-
-  return { success: true, profitLoss };
 }

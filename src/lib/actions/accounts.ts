@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { AccountType } from "@/lib/types";
 
-export async function createAccount(formData: FormData): Promise<{ success: boolean; error?: string }> {
+export async function createAccount(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Not authenticated" };
+  if (!user) return;
 
   const name = (formData.get("name") as string)?.trim();
   const type = formData.get("type") as AccountType;
@@ -18,7 +18,7 @@ export async function createAccount(formData: FormData): Promise<{ success: bool
   const invested = parseFloat((formData.get("invested_amount") as string) || "0");
   const current = parseFloat((formData.get("current_value") as string) || "0");
 
-  if (!name) return { success: false, error: "Name is required" };
+  if (!name) return;
 
   const balance = type === "investment" ? current : opening;
 
@@ -33,19 +33,18 @@ export async function createAccount(formData: FormData): Promise<{ success: bool
     current_value: type === "investment" ? current : 0,
   });
 
-  if (error) return { success: false, error: error.message };
+  if (error) return;
 
   revalidatePath("/");
   revalidatePath("/accounts");
-  return { success: true };
 }
 
-export async function updateInvestmentValues(formData: FormData): Promise<{ success: boolean; error?: string }> {
+export async function updateInvestmentValues(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Not authenticated" };
+  if (!user) return;
 
   const accountId = formData.get("account_id") as string;
   const invested = parseFloat((formData.get("invested_amount") as string) || "0");
@@ -61,22 +60,21 @@ export async function updateInvestmentValues(formData: FormData): Promise<{ succ
     .eq("id", accountId)
     .eq("user_id", user.id);
 
-  if (error) return { success: false, error: error.message };
+  if (error) return;
 
   revalidatePath("/");
   revalidatePath("/investments");
-  return { success: true };
 }
 
-export async function deleteAccountForm(formData: FormData): Promise<{ success: boolean; error?: string }> {
+export async function deleteAccountForm(formData: FormData): Promise<void> {
   const accountId = formData.get("account_id") as string;
-  if (!accountId) return { success: false, error: "Account ID is required" };
+  if (!accountId) return;
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Not authenticated" };
+  if (!user) return;
 
   const { error } = await supabase
     .from("accounts")
@@ -84,10 +82,9 @@ export async function deleteAccountForm(formData: FormData): Promise<{ success: 
     .eq("id", accountId)
     .eq("user_id", user.id);
 
-  if (error) return { success: false, error: error.message };
+  if (error) return;
 
   revalidatePath("/");
   revalidatePath("/accounts");
   revalidatePath("/investments");
-  return { success: true };
 }
