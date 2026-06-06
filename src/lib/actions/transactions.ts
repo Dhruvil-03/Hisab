@@ -40,12 +40,12 @@ async function upsertContact(
     .upsert({ user_id: userId, name: trimmed }, { onConflict: "user_id,name" });
 }
 
-export async function createIncome(formData: FormData): Promise<void> {
+export async function createIncome(formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "Not signed in" };
 
   const amount = parseFloat(formData.get("amount") as string);
   const accountId = formData.get("account_id") as string;
@@ -53,7 +53,7 @@ export async function createIncome(formData: FormData): Promise<void> {
   const description = (formData.get("description") as string)?.trim() || null;
   const date = (formData.get("transaction_date") as string) || new Date().toISOString().slice(0, 10);
 
-  if (!amount || amount <= 0) return;
+  if (!amount || amount <= 0) return { error: "Enter a valid amount" };
 
   const { data: txn, error: txnError } = await supabase
     .from("transactions")
@@ -69,7 +69,7 @@ export async function createIncome(formData: FormData): Promise<void> {
     .select("id")
     .single();
 
-  if (txnError || !txn) return;
+  if (txnError || !txn) return { error: txnError?.message || "Failed" };
 
   await supabase.from("account_movements").insert({
     transaction_id: txn.id,
@@ -81,14 +81,15 @@ export async function createIncome(formData: FormData): Promise<void> {
 
   revalidatePath("/");
   revalidatePath("/transactions");
+  return { success: true };
 }
 
-export async function createExpense(formData: FormData): Promise<void> {
+export async function createExpense(formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "Not signed in" };
 
   const amount = parseFloat(formData.get("amount") as string);
   const personalAmount = parseFloat(
@@ -100,20 +101,20 @@ export async function createExpense(formData: FormData): Promise<void> {
   const date = (formData.get("transaction_date") as string) || new Date().toISOString().slice(0, 10);
   const splitsJson = formData.get("splits") as string | null;
 
-  if (!amount || amount <= 0) return;
+  if (!amount || amount <= 0) return { error: "Enter a valid amount" };
 
   let splits: { name: string; amount: number }[] = [];
   if (splitsJson) {
     try {
       splits = JSON.parse(splitsJson);
     } catch {
-      return;
+      return { error: "Invalid split data" };
     }
   }
 
   const splitTotal = splits.reduce((s, x) => s + x.amount, 0);
   if (splitTotal > amount + 0.01) {
-    return;
+    return { error: "Split amounts cannot exceed total" };
   }
 
   const { data: txn, error: txnError } = await supabase
@@ -130,7 +131,7 @@ export async function createExpense(formData: FormData): Promise<void> {
     .select("id")
     .single();
 
-  if (txnError || !txn) return;
+  if (txnError || !txn) return { error: txnError?.message || "Failed" };
 
   await supabase.from("account_movements").insert({
     transaction_id: txn.id,
@@ -155,14 +156,15 @@ export async function createExpense(formData: FormData): Promise<void> {
   revalidatePath("/");
   revalidatePath("/transactions");
   revalidatePath("/receivables");
+  return { success: true };
 }
 
-export async function createTransfer(formData: FormData): Promise<void> {
+export async function createTransfer(formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "Not signed in" };
 
   const amount = parseFloat(formData.get("amount") as string);
   const fromId = formData.get("from_account_id") as string;
@@ -170,8 +172,8 @@ export async function createTransfer(formData: FormData): Promise<void> {
   const description = (formData.get("description") as string)?.trim() || "Transfer";
   const date = (formData.get("transaction_date") as string) || new Date().toISOString().slice(0, 10);
 
-  if (!amount || amount <= 0) return;
-  if (fromId === toId) return;
+  if (!amount || amount <= 0) return { error: "Enter a valid amount" };
+  if (fromId === toId) return { error: "Choose different accounts" };
 
   const { data: fromAcc } = await supabase
     .from("accounts")
@@ -205,7 +207,7 @@ export async function createTransfer(formData: FormData): Promise<void> {
     .select("id")
     .single();
 
-  if (txnError || !txn) return;
+  if (txnError || !txn) return { error: txnError?.message || "Failed" };
 
   await supabase.from("account_movements").insert([
     { transaction_id: txn.id, account_id: fromId, amount: -amount },
@@ -247,14 +249,15 @@ export async function createTransfer(formData: FormData): Promise<void> {
   revalidatePath("/");
   revalidatePath("/transactions");
   revalidatePath("/investments");
+  return { success: true };
 }
 
-export async function createLoanGiven(formData: FormData): Promise<void> {
+export async function createLoanGiven(formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "Not signed in" };
 
   const amount = parseFloat(formData.get("amount") as string);
   const accountId = formData.get("account_id") as string;
@@ -262,8 +265,8 @@ export async function createLoanGiven(formData: FormData): Promise<void> {
   const description = (formData.get("description") as string)?.trim() || "Paid — awaiting return";
   const date = (formData.get("transaction_date") as string) || new Date().toISOString().slice(0, 10);
 
-  if (!amount || amount <= 0) return;
-  if (!contactName) return;
+  if (!amount || amount <= 0) return { error: "Enter a valid amount" };
+  if (!contactName) return { error: "Enter who owes you" };
 
   const { data: txn, error: txnError } = await supabase
     .from("transactions")
@@ -278,7 +281,7 @@ export async function createLoanGiven(formData: FormData): Promise<void> {
     .select("id")
     .single();
 
-  if (txnError || !txn) return;
+  if (txnError || !txn) return { error: txnError?.message || "Failed" };
 
   await supabase.from("account_movements").insert({
     transaction_id: txn.id,
@@ -299,6 +302,7 @@ export async function createLoanGiven(formData: FormData): Promise<void> {
 
   revalidatePath("/");
   revalidatePath("/receivables");
+  return { success: true };
 }
 
 export async function settleReceivable(formData: FormData): Promise<void> {

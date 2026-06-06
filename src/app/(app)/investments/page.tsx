@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { SubmitButton } from "@/components/SubmitButton";
 import { formatINR } from "@/lib/format";
 import { getAccounts } from "@/lib/queries";
-import { updateInvestmentValues } from "@/lib/actions/accounts";
+import { updateInvestmentValuesAction } from "@/lib/actions/accounts";
 
 export default async function InvestmentsPage() {
   const accounts = await getAccounts();
@@ -77,7 +77,7 @@ export default async function InvestmentsPage() {
                     {formatINR(g)}
                   </p>
 
-                  <form action={updateInvestmentValues} className="mt-3 space-y-2 border-t pt-3">
+                  <form action={updateInvestmentValuesAction} className="mt-3 space-y-2 border-t pt-3">
                     <input type="hidden" name="account_id" value={a.id} />
                     <div className="grid grid-cols-2 gap-2">
                       <div className="field mb-0">

@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { SubmitButton } from "@/components/SubmitButton";
 import { formatINR } from "@/lib/format";
 import { getAccounts } from "@/lib/queries";
-import { createAccount, deleteAccountForm } from "@/lib/actions/accounts";
+import { createAccountAction, deleteAccountFormAction } from "@/lib/actions/accounts";
 
 export default async function AccountsPage() {
   const accounts = await getAccounts();
@@ -15,7 +15,7 @@ export default async function AccountsPage() {
       <main className="space-y-6 px-4 py-4">
         <section className="card">
           <h2 className="mb-3 font-semibold">Add account</h2>
-          <form action={createAccount} className="space-y-0">
+          <form action={createAccountAction} className="space-y-0">
             <div className="field">
               <label className="label">Name</label>
               <input className="input" name="name" required placeholder="e.g. HDFC Bank" />
@@ -85,7 +85,7 @@ export default async function AccountsPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold">{formatINR(Number(a.balance))}</p>
-                    <form action={deleteAccountForm}>
+                    <form action={deleteAccountFormAction}>
                       <input type="hidden" name="account_id" value={a.id} />
                       <button type="submit" className="text-xs text-[var(--danger)]">
                         Delete
@@ -114,7 +114,7 @@ export default async function AccountsPage() {
                     )}
                     <p className="mt-1 font-bold">{formatINR(Number(a.current_value))}</p>
                   </div>
-                  <form action={deleteAccountForm}>
+                  <form action={deleteAccountFormAction}>
                     <input type="hidden" name="account_id" value={a.id} />
                     <button type="submit" className="text-xs text-[var(--danger)]">
                       Delete
